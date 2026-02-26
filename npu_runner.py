@@ -42,3 +42,4 @@ output = model.generate(
     pad_token_id=tokenizer.eos_token_id
 )
 print(f"\nResponse: {tokenizer.decode(output[0], skip_special_tokens=True)}")
+##e
