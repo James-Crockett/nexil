@@ -18,5 +18,3 @@ def cmd_devices():
       
     console = Console()
     console.print(table) 
-
-cmd_devices()
