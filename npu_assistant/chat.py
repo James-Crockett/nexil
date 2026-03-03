@@ -17,6 +17,9 @@ def cmd_chat(config):
                 history.append({"role": "system", "content": config.system_prompt})
                 print("History cleared.")
                 continue
+            else:                                                                                                                           
+                  print("Unknown command:", user_input)
+                  continue   
             
         history.append({"role": "user", "content": user_input})
 
