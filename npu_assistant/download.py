@@ -4,6 +4,8 @@ import subprocess
 OUTPUT_DIR = Path.home() / ".cache" / "npu-assistant" / "models" / "Qwen2.5-3B-Instruct-int4-ov"
 
 def cmd_download(model_id, output_dir):
+    """ Checks if model exists else creates new"""
+    
     if output_dir.exists() and any(output_dir.glob("*.xml")):
         print("Model already exists")
         return

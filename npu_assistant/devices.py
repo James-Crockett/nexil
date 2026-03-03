@@ -4,8 +4,7 @@ from rich.table import Table
 
 
 def cmd_devices():
-
-    #get devices
+    """ List out the devices onboard"""
     core = ov.Core()
     devices = core.available_devices
 
