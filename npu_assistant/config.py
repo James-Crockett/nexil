@@ -4,11 +4,11 @@ from dataclasses import dataclass
 
 #default settings
 CONFIG_PATH = Path.home() / ".config" / "npu-assistant" / "config.toml"
-DEFAULT_MODEL_PATH = Path.home() / ".config" / "npu-assistant" / "models" / "Qwen2.5-3B-Instruct-int4-ov"
-
+DEFAULT_MODEL_PATH = Path.home() / ".cache" / "npu-assistant" / "models" / "Qwen2.5-3B-Instruct-int4-ov"
+DEFAULT_PROMPT = "You are a helpful assistant. Be concise and direct"
 
 @dataclass 
-class config:
+class Config:
     name: str = "Assistant"
     system_prompt: str = DEFAULT_PROMPT
     device: str = "NPU"
