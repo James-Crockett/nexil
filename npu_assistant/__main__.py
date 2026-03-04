@@ -1,5 +1,5 @@
 from .chat import cmd_chat
-from .config import Config, find_model, MODELS_DIR
+from .config import Config, find_model, MODELS_DIR, load_config
 from .devices import cmd_devices
 from .download import cmd_download, DEFAULT_MODEL_ID
 
@@ -29,14 +29,14 @@ def main():
         output_dir = Path(args.output) if args.output else None
         cmd_download(args.model_id, output_dir)
     else:
-        config = Config()
+        config = load_config()
 
         # CLI args override defaults
         if hasattr(args, 'model') and args.model:
             config.model_path = args.model
         else:
             config.model_path = find_model()
-            
+
         if hasattr(args, 'device') and args.device:
             config.device = args.device
 
