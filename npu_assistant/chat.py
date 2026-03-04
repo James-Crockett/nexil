@@ -12,6 +12,7 @@ def cmd_chat(config):
         #checks for slash
         if user_input.startswith("/"):
             if user_input == "/quit":
+                print("Bye Bye!")
                 break
             elif user_input == "/clear":
                 history = ov_genai.ChatHistory()
