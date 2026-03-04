@@ -1,9 +1,10 @@
 import openvino as ov
 from rich.console import Console
 from rich.table import Table
-from .config import load_config
+from .config import load_config, save_device
+from InquirerPy import inquirer
 
-# Devices that OpenVINO detects but can't actually run inference on
+#Openvino can detect gpus but cannot run on them, will work with Intel GPUs
 UNSUPPORTED_DEVICES = {"GPU"}
 
 
@@ -28,3 +29,19 @@ def cmd_devices():
 
     console = Console()
     console.print(table)
+
+    #picking supported devices
+    supported = []
+    for d in devices:
+        if d not in UNSUPPORTED_DEVICES:
+            supported.append(d)
+    if supported:
+        supported.append("Exit") #additional option
+        selected = inquirer.select(
+            message="Select a device:",
+            choices=supported,
+        ).execute()
+        if selected == "Exit": # if user wants to do nothing
+            return
+        save_device(selected)
+        print(f"Device set to: {selected}")

@@ -66,6 +66,35 @@ def save_model_path(model_path):
 
 
 
+def save_device(device):
+    """Save selected device to config file."""
+    if not CONFIG_PATH.exists():
+        CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
+        CONFIG_PATH.write_text(DEFAULT_CONFIG)
+
+    text = CONFIG_PATH.read_text()
+    lines = text.splitlines()
+    new_lines = []
+    found = False
+
+    for line in lines:
+        if line.strip().startswith("device"):
+            new_lines.append(f'device = "{device}"')
+            found = True
+        else:
+            new_lines.append(line)
+
+    if not found:
+        final_lines = []
+        for line in new_lines:
+            final_lines.append(line)
+            if line.strip() == "[model]":
+                final_lines.append(f'device = "{device}"')
+        new_lines = final_lines
+
+    CONFIG_PATH.write_text("\n".join(new_lines) + "\n")
+
+
 def load_config():
     """Loads config files if created else goes with default configs"""
     if not CONFIG_PATH.exists():
