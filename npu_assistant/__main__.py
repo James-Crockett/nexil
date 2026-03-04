@@ -2,6 +2,7 @@ from .chat import cmd_chat
 from .config import Config
 from .devices import cmd_devices
 from .download import cmd_download, OUTPUT_DIR
+
 import argparse
 
 def main():
