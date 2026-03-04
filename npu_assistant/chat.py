@@ -3,15 +3,22 @@ from pathlib import Path
 
 def cmd_chat(config):
     """Chat things """
-    # NPU compiler cache — first load compiles the graph, because it is taking close to 9s to load
+    # NPU-specific options (MAX_PROMPT_LEN, MIN_RESPONSE_LEN only work on NPU)
+    # 9s to load without cache, around 3s with
     cache_dir = str(Path.home() / ".cache" / "npu-assistant" / "compiled")
-    pipe = ov_genai.LLMPipeline(
-        config.model_path,
-        config.device,
-        MAX_PROMPT_LEN=1024,
-        MIN_RESPONSE_LEN=512,
-        CACHE_DIR=cache_dir,
-    )
+    if config.device == "NPU":
+        pipe = ov_genai.LLMPipeline(
+            config.model_path,
+            config.device,
+            MAX_PROMPT_LEN=1024,
+            MIN_RESPONSE_LEN=512,
+            CACHE_DIR=cache_dir,
+        )
+    else:
+        pipe = ov_genai.LLMPipeline(
+            config.model_path,
+            config.device,
+        )
     history = ov_genai.ChatHistory() 
     history.append({"role": "system", "content": config.system_prompt})
 
