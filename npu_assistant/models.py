@@ -1,7 +1,7 @@
 from pathlib import Path
 from rich.console import Console
 from rich.table import Table
-from .config import save_model_path
+from .config import save_model_path, load_config
 from InquirerPy import inquirer
 
 MODELS_DIR = Path.home() / ".cache" / "npu-assistant" / "models"
@@ -40,11 +40,18 @@ def cmd_model():
         print("  npu-assistant download --model-id Qwen/Qwen2.5-3B-Instruct")
         return
 
-    #show downloaded models
+    #show downloaded models, highlight active model
+    config = load_config()
+    active_path = config.model_path
+
     table = Table()
     table.add_column("Models Onboard", justify="left", style="cyan", no_wrap=True)
+    table.add_column("", justify="left", no_wrap=True)
     for model in models:
-        table.add_row(model.name)
+        if str(model) == active_path:
+            table.add_row(f"[bold green]{model.name}[/bold green]", "[bold green]Active[/bold green]")
+        else:
+            table.add_row(model.name, "")
       
     console = Console()
     console.print(table) 
