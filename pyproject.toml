@@ -8,6 +8,7 @@ dependencies = [
     "openvino-genai>=2026.0.0",
     "optimum-intel[openvino]>=1.25.0",
     "rich>=14.0.0",
+    "InquirerPy>=0.3.4",
 ]
 
 [project.scripts]
