@@ -1,8 +1,17 @@
 import openvino_genai as ov_genai
+from pathlib import Path
 
 def cmd_chat(config):
     """Chat things """
-    pipe = ov_genai.LLMPipeline(config.model_path, config.device)
+    # NPU compiler cache — first load compiles the graph, because it is taking close to 9s to load
+    cache_dir = str(Path.home() / ".cache" / "npu-assistant" / "compiled")
+    pipe = ov_genai.LLMPipeline(
+        config.model_path,
+        config.device,
+        MAX_PROMPT_LEN=1024,
+        MIN_RESPONSE_LEN=512,
+        CACHE_DIR=cache_dir,
+    )
     history = ov_genai.ChatHistory() 
     history.append({"role": "system", "content": config.system_prompt})
 
