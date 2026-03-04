@@ -1,6 +1,7 @@
 import openvino_genai as ov_genai
 
 def cmd_chat(config):
+    """Chat things """
     pipe = ov_genai.LLMPipeline(config.model_path, config.device)
     history = ov_genai.ChatHistory() 
     history.append({"role": "system", "content": config.system_prompt})
