@@ -45,6 +45,7 @@ def cmd_chat(config):
         gen_config = ov_genai.GenerationConfig()
         gen_config.max_new_tokens = config.max_new_tokens
         gen_config.do_sample = config.do_sample
+        gen_config.repetition_penalty = config.rep_penalty
         
         #stream it tolken by token
         response_tokens = []

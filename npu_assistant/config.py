@@ -9,7 +9,7 @@ DEFAULT_CONFIG = """
 
 [assistant]
 name = "Assistant"
-system_prompt = "You are a helpful assistant. Be concise and direct. English is your primary language."
+system_prompt = "You are a helpful assistant. Be concise and direct. Always respond in English only."
 
 [model]
 device = "NPU"
@@ -21,7 +21,7 @@ rep_penalty = 1.1
 
 #default model settings
 MODELS_DIR = Path.home() / ".cache" / "npu-assistant" / "models"
-DEFAULT_PROMPT = "You are a helpful assistant. Be concise and direct. English is your primary language."
+DEFAULT_PROMPT = "You are a helpful assistant. Be concise and direct. Always respond in English only."
 
 @dataclass
 class Config:
