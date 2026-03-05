@@ -58,10 +58,14 @@ def cmd_model():
 
     #picking model
     choices = [model.name for model in models]
+    choices.append("Exit")
     selected = inquirer.select(
         message="Select a model:",
         choices=choices,
     ).execute()
+
+    if selected == "Exit":
+        return
 
     for model in models:
         if model.name == selected:
