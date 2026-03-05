@@ -26,6 +26,63 @@ def parse_tool_call(response):
     return None
 
 
+def build_system_prompt(config):
+    """Build system prompt with tool descriptions included."""
+    tools = get_all_tools()
+    tool_names = [f"- {t['function']['name']}: {t['function']['description']}" for t in tools]
+    tool_list_str = "\n".join(tool_names)
+    return config.system_prompt + f"\n\nTools available:\n{tool_list_str}\n\nTo use a tool, reply with ONLY:\n```json\n{{\"tool_used\": \"tool_name\", \"arguments\": {{}}}}\n```\nNo other text. Wait for the result."
+
+
+def handle_command(user_input, history, system_prompt):
+    """Handle slash commands. Returns (should_break, history)."""
+    if user_input == "/quit":
+        print("Bye Bye!")
+        return True, history
+    elif user_input == "/clear":
+        history = ov_genai.ChatHistory()
+        history.append({"role": "system", "content": system_prompt})
+        print("History cleared.")
+        return False, history
+    else:
+        print("Unknown command:", user_input)
+        return False, history
+
+
+def handle_response(pipe, history, gen_config):
+    """Generate a response, handle tool calls if present. Returns updated history."""
+    response_tokens = []
+    streamer = ThinkingStreamer(response_tokens)
+    pipe.generate(history, generation_config=gen_config, streamer=streamer)
+    streamer.flush()
+    full_response = "".join(response_tokens)
+
+    tool_call = parse_tool_call(full_response)
+
+    if tool_call is None:
+        print()
+        history.append({"role": "assistant", "content": full_response})
+        return history
+
+    # Tool call detected — erase the raw JSON, then run the tool
+    streamer.erase_response()
+    tool_name = tool_call["name"]
+    tool_args = tool_call.get("arguments", {})
+    result = execute_tool(tool_name, tool_args)
+
+    # Feed tool result back and generate a natural follow-up
+    history.append({"role": "assistant", "content": f"[Called {tool_name}]"})
+    history.append({"role": "user", "content": f"Tool result: {result}\nRespond naturally using this information. Be brief."})
+    response_tokens = []
+    streamer = ThinkingStreamer(response_tokens)
+    pipe.generate(history, generation_config=gen_config, streamer=streamer)
+    streamer.flush()
+    full_response = "".join(response_tokens)
+    history.append({"role": "assistant", "content": full_response})
+    print()
+    return history
+
+
 def cmd_chat(config):
     """Chat things """
     # NPU-specific options (MAX_PROMPT_LEN, MIN_RESPONSE_LEN only work on NPU)
@@ -45,73 +102,25 @@ def cmd_chat(config):
             config.device,
         )
     history = ov_genai.ChatHistory()
-    # Add tool descriptions to system prompt so model knows what's available
-    tools = get_all_tools()
-    # Build compact tool list for prompt
-    tool_names = []
-    for t in tools:
-        tool_names.append(f"- {t['function']['name']}: {t['function']['description']}")
-    tool_list_str = "\n".join(tool_names)
+    system_prompt = build_system_prompt(config)
+    history.append({"role": "system", "content": system_prompt})
 
-    tool_prompt = config.system_prompt + f"\n\nTools available:\n{tool_list_str}\n\nTo use a tool, reply with ONLY:\n```json\n{{\"tool_used\": \"tool_name\", \"arguments\": {{}}}}\n```\nNo other text. Wait for the result."
-    history.append({"role": "system", "content": tool_prompt})
+    gen_config = ov_genai.GenerationConfig()
+    gen_config.max_new_tokens = config.max_new_tokens
+    gen_config.do_sample = config.do_sample
+    gen_config.repetition_penalty = config.rep_penalty
 
     while True:
         user_input = input("> ")
 
-        #checks for slash
         if user_input.startswith("/"):
-            if user_input == "/quit":
-                print("Bye Bye!")
+            should_break, history = handle_command(user_input, history, system_prompt)
+            if should_break:
                 break
-            elif user_input == "/clear":
-                history = ov_genai.ChatHistory()
-                history.append({"role": "system", "content": tool_prompt})
-                print("History cleared.")
-                continue
-            else:                                                                                                                           
-                  print("Unknown command:", user_input)
-                  continue   
-            
+            continue
+
         history.append({"role": "user", "content": user_input})
-
-        #generation config
-        gen_config = ov_genai.GenerationConfig()
-        gen_config.max_new_tokens = config.max_new_tokens
-        gen_config.do_sample = config.do_sample
-        gen_config.repetition_penalty = config.rep_penalty
-
-        # Generate with live thinking animation
-        response_tokens = []
-        streamer = ThinkingStreamer(response_tokens)
-        pipe.generate(history, generation_config=gen_config, streamer=streamer)
-        streamer.flush()
-        full_response = "".join(response_tokens)
-
-        # Check if the response contains a tool call
-        tool_call = parse_tool_call(full_response)
-
-        if tool_call is None:
-            # No tool call — just save to history
-            print()
-            history.append({"role": "assistant", "content": full_response})
-        else:
-            # Tool call detected — erase the raw JSON, then run the tool
-            streamer.erase_response()
-            tool_name = tool_call["name"]
-            tool_args = tool_call.get("arguments", {})
-            result = execute_tool(tool_name, tool_args)
-
-            # Feed tool result back and generate a natural response
-            history.append({"role": "assistant", "content": f"[Called {tool_name}]"})
-            history.append({"role": "user", "content": f"Tool result: {result}\nRespond naturally using this information. Be brief."})
-            response_tokens = []
-            streamer = ThinkingStreamer(response_tokens)
-            pipe.generate(history, generation_config=gen_config, streamer=streamer)
-            streamer.flush()
-            full_response = "".join(response_tokens)
-            history.append({"role": "assistant", "content": full_response})
-            print()
+        history = handle_response(pipe, history, gen_config)
 
 
 
