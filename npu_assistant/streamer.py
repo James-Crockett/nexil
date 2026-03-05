@@ -16,6 +16,7 @@ class ThinkingStreamer:
         self.buffer = ""
         self.think_line = ""
         self.inside_think = False
+        self.inside_tool_call = False
         self.frame = 0
         self.printed_lines = 0  # track lines printed outside think tags
 
@@ -85,7 +86,25 @@ class ThinkingStreamer:
             self._render_think_line()
             return False
 
-        # Outside think tags — wait for partial tags to resolve
+        # Check for <tool_call> opening tag
+        if "<tool_call>" in self.buffer and not self.inside_tool_call:
+            self.inside_tool_call = True
+            self.buffer = self.buffer.split("<tool_call>", 1)[1]
+            return False
+
+        # Check for </tool_call> closing tag
+        if "</tool_call>" in self.buffer and self.inside_tool_call:
+            self.inside_tool_call = False
+            after = self.buffer.split("</tool_call>", 1)[1]
+            self.buffer = after
+            # Fall through to print anything after the closing tag
+
+        # Inside tool_call tags — silently consume
+        if self.inside_tool_call:
+            self.buffer = ""
+            return False
+
+        # Outside think/tool_call tags — wait for partial tags to resolve
         if "<" in self.buffer and not self.buffer.endswith(">"):
             return False
 
@@ -93,19 +112,6 @@ class ThinkingStreamer:
         print(self.buffer, end="", flush=True)
         self.buffer = ""
         return False
-
-    def erase_response(self):
-        """Erase all non-think output that was printed (e.g. tool call JSON)."""
-        try:
-            cols = os.get_terminal_size().columns
-        except OSError:
-            cols = 80
-        # Clear current line first
-        print("\r" + " " * cols + "\r", end="", flush=True)
-        # Move up and clear each line that had a newline
-        for _ in range(self.printed_lines):
-            print("\033[A\033[2K", end="", flush=True)
-        self.printed_lines = 0
 
     def flush(self):
         """Print any remaining buffer content."""

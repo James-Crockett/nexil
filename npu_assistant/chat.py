@@ -6,32 +6,34 @@ from .tools import get_all_tools, execute_tool
 from .streamer import ThinkingStreamer
 
 def parse_tool_call(response):
-    """Check if the model's response contains a tool call. Returns dict with name/arguments or None."""
-    # Look for JSON blocks containing "function" and "name"
-    # The model outputs JSON in code blocks like ```...```
-    json_blocks = re.findall(r'```(?:\w*)\n?(.*?)```', response, re.DOTALL)
-    for block in json_blocks:
-        try:
-            data = json.loads(block.strip())
-            # Format: {"type": "function", "function": {"name": "..."}}
-            if isinstance(data, dict):
-                if "function" in data and "name" in data["function"]:
-                    return {"name": data["function"]["name"], "arguments": data["function"].get("arguments", {})}
-                if "name" in data:
-                    return {"name": data["name"], "arguments": data.get("arguments", {})}
-                if "tool_used" in data:
-                    return {"name": data["tool_used"], "arguments": data.get("arguments", {})}
-        except json.JSONDecodeError:
-            continue
+    """Check if the model's response contains a <tool_call> block. Returns dict with name/arguments or None."""
+    match = re.search(r'<tool_call>\s*(.*?)\s*</tool_call>', response, re.DOTALL)
+    if not match:
+        return None
+    try:
+        data = json.loads(match.group(1))
+        if isinstance(data, dict) and "name" in data:
+            return {"name": data["name"], "arguments": data.get("arguments", {})}
+    except json.JSONDecodeError:
+        pass
     return None
 
 
 def build_system_prompt(config):
-    """Build system prompt with tool descriptions included."""
+    """Build system prompt with tool descriptions in Qwen3's native format."""
     tools = get_all_tools()
-    tool_names = [f"- {t['function']['name']}: {t['function']['description']}" for t in tools]
-    tool_list_str = "\n".join(tool_names)
-    return config.system_prompt + f"\n\nTools available:\n{tool_list_str}\n\nTo use a tool, reply with ONLY:\n```json\n{{\"tool_used\": \"tool_name\", \"arguments\": {{}}}}\n```\nNo other text. Wait for the result."
+    tools_json = "\n".join(json.dumps(t, ensure_ascii=False) for t in tools)
+    return (
+        config.system_prompt
+        + "\n\n# Tools\n\nYou may call one or more functions to assist with the user query.\n\n"
+        + "You are provided with function signatures within <tools></tools> XML tags:\n"
+        + f"<tools>\n{tools_json}\n</tools>\n\n"
+        + "For each function call, return a json object with function name and arguments "
+        + "within <tool_call></tool_call> XML tags:\n"
+        + "<tool_call>\n"
+        + '{"name": <function-name>, "arguments": <args-json-object>}\n'
+        + "</tool_call>"
+    )
 
 
 def handle_command(user_input, history, system_prompt):
@@ -64,15 +66,14 @@ def handle_response(pipe, history, gen_config):
         history.append({"role": "assistant", "content": full_response})
         return history
 
-    # Tool call detected — erase the raw JSON, then run the tool
-    streamer.erase_response()
+    # Tool call detected — run the tool (streamer already suppressed the raw JSON)
     tool_name = tool_call["name"]
     tool_args = tool_call.get("arguments", {})
     result = execute_tool(tool_name, tool_args)
 
-    # Feed tool result back and generate a natural follow-up
-    history.append({"role": "assistant", "content": f"[Called {tool_name}]"})
-    history.append({"role": "user", "content": f"Tool result: {result}\nRespond naturally using this information. Be brief."})
+    # Feed tool result back using native format and generate a natural follow-up
+    history.append({"role": "assistant", "content": full_response})
+    history.append({"role": "user", "content": f"<tool_response>\n{result}\n</tool_response>"})
     response_tokens = []
     streamer = ThinkingStreamer(response_tokens)
     pipe.generate(history, generation_config=gen_config, streamer=streamer)
