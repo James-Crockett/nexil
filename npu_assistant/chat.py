@@ -3,6 +3,7 @@ import json
 import re
 from pathlib import Path
 from .tools import get_all_tools, execute_tool
+from .streamer import ThinkingStreamer
 
 def parse_tool_call(response):
     """Check if the model's response contains a tool call. Returns dict with name/arguments or None."""
@@ -80,39 +81,34 @@ def cmd_chat(config):
         gen_config.do_sample = config.do_sample
         gen_config.repetition_penalty = config.rep_penalty
 
-        # First generation — silent (don't stream), check for tool call
+        # Generate with live thinking animation
         response_tokens = []
-
-        def silent_streamer(token):
-            response_tokens.append(token)
-            return False
-
-        def loud_streamer(token):
-            response_tokens.append(token)
-            print(token, end="", flush=True)
-            return False
-
-        pipe.generate(history, generation_config=gen_config, streamer=silent_streamer)
+        streamer = ThinkingStreamer(response_tokens)
+        pipe.generate(history, generation_config=gen_config, streamer=streamer)
+        streamer.flush()
         full_response = "".join(response_tokens)
 
         # Check if the response contains a tool call
         tool_call = parse_tool_call(full_response)
 
         if tool_call is None:
-            # No tool call — just print the response
-            print(full_response)
+            # No tool call — just save to history
+            print()
             history.append({"role": "assistant", "content": full_response})
         else:
-            # Tool call detected — run it silently, then generate a visible response
+            # Tool call detected — erase the raw JSON, then run the tool
+            streamer.erase_response()
             tool_name = tool_call["name"]
             tool_args = tool_call.get("arguments", {})
             result = execute_tool(tool_name, tool_args)
 
-            # Feed tool result back and generate a natural response (streamed)
+            # Feed tool result back and generate a natural response
             history.append({"role": "assistant", "content": f"[Called {tool_name}]"})
             history.append({"role": "user", "content": f"Tool result: {result}\nRespond naturally using this information. Be brief."})
             response_tokens = []
-            pipe.generate(history, generation_config=gen_config, streamer=loud_streamer)
+            streamer = ThinkingStreamer(response_tokens)
+            pipe.generate(history, generation_config=gen_config, streamer=streamer)
+            streamer.flush()
             full_response = "".join(response_tokens)
             history.append({"role": "assistant", "content": full_response})
             print()
