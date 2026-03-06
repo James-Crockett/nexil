@@ -66,7 +66,7 @@ def build_system_prompt(config):
         tools_json = "\n".join(json.dumps(t, ensure_ascii=False) for t in tools)
         return (
             config.system_prompt
-            + "\n\n# Tools\n\nYou may call one or more functions to assist with the user query.\n\n"
+            + "\n\n# Tools\n\nYou have access to tools. Only use them when the user's request requires it. Do not use tools for greetings or general conversation.\n\n"
             + "You are provided with function signatures within <tools></tools> XML tags:\n"
             + f"<tools>\n{tools_json}\n</tools>\n\n"
             + "For each function call, return a json object with function name and arguments "
@@ -79,7 +79,7 @@ def build_system_prompt(config):
     # Fallback prompt-based format for models without native tool calling
     tool_names = [f"- {t['function']['name']}: {t['function']['description']}" for t in tools]
     tool_list_str = "\n".join(tool_names)
-    return config.system_prompt + f"\n\nTools available:\n{tool_list_str}\n\nTo use a tool, reply with ONLY:\n```json\n{{\"tool_used\": \"tool_name\", \"arguments\": {{}}}}\n```\nNo other text. Wait for the result."
+    return config.system_prompt + f"\n\nYou have access to tools. Only use them when the user's request requires it. Do not use tools for greetings or general conversation.\n\nTools available:\n{tool_list_str}\n\nTo use a tool, reply with ONLY:\n```json\n{{\"tool_used\": \"tool_name\", \"arguments\": {{}}}}\n```\nNo other text. Wait for the result."
 
 
 def handle_command(user_input, history, system_prompt):
