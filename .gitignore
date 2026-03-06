@@ -1,2 +1,19 @@
-npu_personal_assistant.egg-info
-__pycache__
+# Build artifacts
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual environments
+.venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo

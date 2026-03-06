@@ -49,7 +49,7 @@ def main():
 
         if config.model_path is None:
             print("No model found. Install one first:")
-            print(f"  npu-assistant download --model-id Qwen/Qwen3.5-4B")
+            print(f"  nexil download --model-id Qwen/Qwen3.5-4B")
             print(f"\nModels are stored in: {MODELS_DIR}")
             return
 

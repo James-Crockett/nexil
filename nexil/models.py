@@ -4,7 +4,7 @@ from rich.table import Table
 from .config import save_model_path, load_config
 from InquirerPy import inquirer
 
-MODELS_DIR = Path.home() / ".cache" / "npu-assistant" / "models"
+MODELS_DIR = Path.home() / ".cache" / "nexil" / "models"
 
 
 def get_installed_models():
@@ -38,7 +38,7 @@ def select_model(current_path=None):
     if not models:
         console = Console()
         console.print("[red]No models installed.[/red] Download one first:")
-        console.print("  npu-assistant download --model-id Qwen/Qwen2.5-3B-Instruct")
+        console.print("  nexil download --model-id Qwen/Qwen2.5-3B-Instruct")
         return None
 
     active_path = current_path

@@ -1,7 +1,7 @@
 from pathlib import Path
 import subprocess
 
-MODELS_DIR = Path.home() / ".cache" / "npu-assistant" / "models"
+MODELS_DIR = Path.home() / ".cache" / "nexil" / "models"
 DEFAULT_MODEL_ID = "Qwen/Qwen3.5-4B"
 
 def model_dir_from_id(model_id):

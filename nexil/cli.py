@@ -17,7 +17,7 @@ def print_banner(config):
     subtitle = f"Model: [cyan]{model_name}[/cyan]  |  Device: [cyan]{config.device}[/cyan]"
     banner = Panel(
         subtitle,
-        title="[bold]NPU Personal Assistant[/bold]",
+        title="[bold]Nexil[/bold]",
         border_style="blue",
         padding=(0, 2),
     )
@@ -28,7 +28,7 @@ def print_banner(config):
 
 def create_pipeline(config):
     """Create LLM pipeline with loading feedback."""
-    cache_dir = str(Path.home() / ".cache" / "npu-assistant" / "compiled")
+    cache_dir = str(Path.home() / ".cache" / "nexil" / "compiled")
     with console.status("Loading model...", spinner="dots"):
         if config.device == "NPU":
             pipe = ov_genai.LLMPipeline(
