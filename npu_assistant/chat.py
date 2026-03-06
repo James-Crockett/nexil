@@ -1,6 +1,7 @@
 import openvino_genai as ov_genai
 import json
 import re
+import time
 from pathlib import Path
 from .tools import get_all_tools, execute_tool
 from .streamer import ThinkingStreamer
@@ -97,18 +98,28 @@ def handle_command(user_input, history, system_prompt):
         return False, history
 
 
+def print_stats(perf, elapsed):
+    """Print generation stats: duration, input tokens, output tokens."""
+    input_tokens = perf.get_num_input_tokens()
+    output_tokens = perf.get_num_generated_tokens()
+    print(f"\033[90mDuration {elapsed:.2f}s | Input tokens: {input_tokens:,} | Output tokens: {output_tokens}\033[0m")
+
+
 def handle_response(pipe, history, gen_config, config):
     """Generate a response, handle tool calls if present. Returns updated history."""
+    start = time.monotonic()
     response_tokens = []
     streamer = ThinkingStreamer(response_tokens, config.thinks, config.native_tools)
-    pipe.generate(history, generation_config=gen_config, streamer=streamer)
+    result = pipe.generate(history, generation_config=gen_config, streamer=streamer)
     streamer.flush()
     full_response = "".join(response_tokens)
 
     tool_call = parse_tool_call(full_response)
 
     if tool_call is None:
+        elapsed = time.monotonic() - start
         print()
+        print_stats(result.perf_metrics, elapsed)
         history.append({"role": "assistant", "content": full_response})
         return history
 
@@ -117,27 +128,29 @@ def handle_response(pipe, history, gen_config, config):
         streamer.erase_response()
     tool_name = tool_call["name"]
     tool_args = tool_call.get("arguments", {})
-    result = execute_tool(tool_name, tool_args)
+    tool_result = execute_tool(tool_name, tool_args)
 
     # Feed tool result back and generate a natural follow-up
     if config.native_tools:
         history.append({"role": "assistant", "content": full_response})
-        history.append({"role": "user", "content": f"<tool_response>\n{result}\n</tool_response>"})
+        history.append({"role": "user", "content": f"<tool_response>\n{tool_result}\n</tool_response>"})
     else:
         history.append({"role": "assistant", "content": f"[Called {tool_name}]"})
-        history.append({"role": "user", "content": f"Tool result: {result}\nRespond naturally using this information. Be brief."})
-    
+        history.append({"role": "user", "content": f"Tool result: {tool_result}\nRespond naturally using this information. Be brief."})
+
     response_tokens = []
     streamer = ThinkingStreamer(response_tokens, config.thinks, config.native_tools)
-    
-    pipe.generate(history, generation_config=gen_config, streamer=streamer)
+
+    result = pipe.generate(history, generation_config=gen_config, streamer=streamer)
     streamer.flush()
-    
+    elapsed = time.monotonic() - start
+
     full_response = "".join(response_tokens)
-    
+
     history.append({"role": "assistant", "content": full_response})
-    
+
     print()
+    print_stats(result.perf_metrics, elapsed)
     return history
 
 
