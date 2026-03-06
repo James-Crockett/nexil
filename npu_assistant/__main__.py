@@ -1,4 +1,4 @@
-from .chat import cmd_chat
+from .cli import cmd_chat
 from .config import load_config
 from .devices import cmd_devices
 from .download import cmd_download, DEFAULT_MODEL_ID
