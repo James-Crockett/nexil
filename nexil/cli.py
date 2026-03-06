@@ -11,18 +11,21 @@ from .config import save_model_path, save_device
 console = Console()
 
 
+LOGO = """[bold cyan]
+ ███╗   ██╗ ███████╗ ██╗  ██╗ ██╗ ██╗
+ ████╗  ██║ ██╔════╝ ╚██╗██╔╝ ██║ ██║
+ ██╔██╗ ██║ █████╗    ╚███╔╝  ██║ ██║
+ ██║╚██╗██║ ██╔══╝    ██╔██╗  ██║ ██║
+ ██║ ╚████║ ███████╗ ██╔╝ ██╗ ██║ ███████╗
+ ╚═╝  ╚═══╝ ╚══════╝ ╚═╝  ╚═╝ ╚═╝ ╚══════╝[/bold cyan]"""
+
+
 def print_banner(config):
     """Print a styled banner with model and device info."""
+    console.print(LOGO)
     model_name = Path(config.model_path).name if config.model_path else "None"
-    subtitle = f"Model: [cyan]{model_name}[/cyan]  |  Device: [cyan]{config.device}[/cyan]"
-    banner = Panel(
-        subtitle,
-        title="[bold]Nexil[/bold]",
-        border_style="blue",
-        padding=(0, 2),
-    )
-    console.print(banner)
-    console.print("[dim]/help for commands, /model to switch, /quit to exit[/dim]")
+    console.print(f"  Model: [cyan]{model_name}[/cyan]  |  Device: [cyan]{config.device}[/cyan]")
+    console.print("[dim]  /help for commands, /model to switch, /quit to exit[/dim]")
     console.print()
 
 

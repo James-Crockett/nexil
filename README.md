@@ -1,4 +1,11 @@
-# Nexil
+```
+ ███╗   ██╗ ███████╗ ██╗  ██╗ ██╗ ██╗
+ ████╗  ██║ ██╔════╝ ╚██╗██╔╝ ██║ ██║
+ ██╔██╗ ██║ █████╗    ╚███╔╝  ██║ ██║
+ ██║╚██╗██║ ██╔══╝    ██╔██╗  ██║ ██║
+ ██║ ╚████║ ███████╗ ██╔╝ ██╗ ██║ ███████╗
+ ╚═╝  ╚═══╝ ╚══════╝ ╚═╝  ╚═╝ ╚═╝ ╚══════╝
+```
 
 A personal assistant that runs locally on your machine with a familiar CLI interface.
 
@@ -12,10 +19,49 @@ A personal assistant that runs locally on your machine with a familiar CLI inter
 
 ## Requirements
 
-- Linux (tested on Arch based system)
+- Linux (tested on Arch based system, should work on any distro)
 - Python 3.12+
-- Intel hardware. (e.g., Core Ultra) (ONLY SUPPORTS INTEL BASED CPU AND NPU)
-- OpenVINO runtime
+- Intel Core Ultra processor (Meteor Lake / Lunar Lake) for NPU support
+- Intel NPU driver
+- OpenVINO runtime (installed automatically via pip)
+
+### NPU driver setup
+
+The Intel NPU driver is required to run models on the NPU. Without it, you can still run on CPU.
+
+**Arch Linux (AUR):**
+```sh
+yay -S intel-npu-driver
+```
+or 
+
+```sh
+paru -S intel-npu-driver
+```
+**Ubuntu/Debian:**
+
+Download the latest `.deb` packages from the [intel-npu-driver releases](https://github.com/intel/linux-npu-driver/releases) and install:
+```sh
+sudo dpkg -i intel-driver-compiler-npu_*.deb intel-fw-npu_*.deb intel-level-zero-npu_*.deb
+```
+
+**Fedora:**
+
+Download the latest `.rpm` packages from the [intel-npu-driver releases](https://github.com/intel/linux-npu-driver/releases) and install:
+```sh
+sudo rpm -i intel-driver-compiler-npu-*.rpm intel-fw-npu-*.rpm intel-level-zero-npu-*.rpm
+```
+
+After installing the driver, add your user to the `render` group to access the NPU device:
+```sh
+sudo usermod -aG render $USER
+```
+Log out and back in for the group change to take effect.
+
+You can verify the NPU is available by running:
+```sh
+nexil devices
+```
 
 ## Installation
 
