@@ -1,4 +1,5 @@
 from pathlib import Path
+import sys
 import subprocess
 
 MODELS_DIR = Path.home() / ".cache" / "nexil" / "models"
@@ -11,7 +12,7 @@ def model_dir_from_id(model_id):
 
 def cmd_download(model_id, output_dir=None):
     """ Checks if model exists else creates new"""
-    
+
     if output_dir is None:
         output_dir = model_dir_from_id(model_id)
 
@@ -22,7 +23,8 @@ def cmd_download(model_id, output_dir=None):
         print("Model does not exist; Creating folder")
         output_dir.mkdir(parents=True, exist_ok=True)
         result = subprocess.run([
-            "optimum-cli", "export", "openvino",
+            sys.executable, "-m", "optimum.commands.optimum_cli",
+            "export", "openvino",
             "--model", model_id,
             "--weight-format", "int4",
             "--sym",

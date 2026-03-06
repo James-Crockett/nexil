@@ -1,0 +1,23 @@
+# Maintainer: James Crockett <james@crockett.dev>
+pkgname=nexil
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Local LLM chat assistant for Intel hardware via OpenVINO"
+arch=('any')
+url="https://github.com/James-Crockett/nexil"
+license=('Apache-2.0')
+depends=('python' 'python-pip')
+makedepends=('python-build' 'python-installer' 'python-hatchling')
+optdepends=('intel-npu-driver: Required for NPU inference')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/James-Crockett/nexil/archive/v$pkgver.tar.gz")
+sha256sums=('SKIP')
+
+build() {
+    cd "$srcdir/nexil-$pkgver"
+    python -m build --wheel --no-isolation
+}
+
+package() {
+    cd "$srcdir/nexil-$pkgver"
+    python -m installer --destdir="$pkgdir" dist/*.whl
+}
