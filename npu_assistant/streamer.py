@@ -11,8 +11,10 @@ class ThinkingStreamer:
     """Streamer that shows a rolling single-line spinner with live thinking
     text during <think> tags, then streams the actual response normally."""
 
-    def __init__(self, token_list):
+    def __init__(self, token_list, thinks=False, native_tools=False):
         self.tokens = token_list
+        self.thinks = thinks
+        self.native_tools = native_tools
         self.buffer = ""
         self.think_line = ""
         self.inside_think = False
@@ -54,8 +56,8 @@ class ThinkingStreamer:
         self.tokens.append(token)
         self.buffer += token
 
-        # Check for <think> opening tag
-        if "<think>" in self.buffer and not self.inside_think:
+        # Check for <think> opening tag (only if model supports thinking)
+        if self.thinks and "<think>" in self.buffer and not self.inside_think:
             self.inside_think = True
             self.buffer = self.buffer.split("<think>", 1)[1]
             self.think_line = ""
@@ -86,8 +88,8 @@ class ThinkingStreamer:
             self._render_think_line()
             return False
 
-        # Check for <tool_call> opening tag
-        if "<tool_call>" in self.buffer and not self.inside_tool_call:
+        # Check for <tool_call> opening tag (only if model supports native tools)
+        if self.native_tools and "<tool_call>" in self.buffer and not self.inside_tool_call:
             self.inside_tool_call = True
             self.buffer = self.buffer.split("<tool_call>", 1)[1]
             return False
@@ -112,6 +114,17 @@ class ThinkingStreamer:
         print(self.buffer, end="", flush=True)
         self.buffer = ""
         return False
+
+    def erase_response(self):
+        """Erase all non-think output that was printed (e.g. tool call JSON)."""
+        try:
+            cols = os.get_terminal_size().columns
+        except OSError:
+            cols = 80
+        print("\r" + " " * cols + "\r", end="", flush=True)
+        for _ in range(self.printed_lines):
+            print("\033[A\033[2K", end="", flush=True)
+        self.printed_lines = 0
 
     def flush(self):
         """Print any remaining buffer content."""

@@ -29,6 +29,8 @@ class Config:
     system_prompt: str = DEFAULT_PROMPT
     device: str = "NPU"
     model_path: str = None
+    thinks: bool = False
+    native_tools: bool = False
     do_sample: bool = False
     max_new_tokens: int = 512
     rep_penalty: float = 1.1
