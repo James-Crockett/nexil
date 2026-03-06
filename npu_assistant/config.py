@@ -9,19 +9,19 @@ DEFAULT_CONFIG = """
 
 [assistant]
 name = "Assistant"
-system_prompt = "You are a helpful assistant. Be concise and direct. Always respond in English only."
+system_prompt = "You are a helpful assistant. Be concise and direct. Always respond in English only. Address all parts of the user's message, not just the tool-related parts."
 
 [model]
 device = "NPU"
 do_sample = false
-max_new_tokens = 512
+max_new_tokens = 1024
 rep_penalty = 1.1
 
 """
 
 #default model settings
 MODELS_DIR = Path.home() / ".cache" / "npu-assistant" / "models"
-DEFAULT_PROMPT = "You are a helpful assistant. Be concise and direct. Always respond in English only."
+DEFAULT_PROMPT = "You are a helpful assistant. Be concise and direct. Always respond in English only. Address all parts of the user's message, not just the tool-related parts."
 
 @dataclass
 class Config:
@@ -32,7 +32,7 @@ class Config:
     thinks: bool = False
     native_tools: bool = False
     do_sample: bool = False
-    max_new_tokens: int = 512
+    max_new_tokens: int = 1024
     rep_penalty: float = 1.1
 
 
