@@ -4,7 +4,7 @@ from dataclasses import dataclass
 import tomllib
 
 #default config
-CONFIG_PATH = Path.home() / ".config" / "npu-assistant" / "config.toml"
+CONFIG_PATH = Path.home() / ".config" / "nexil" / "config.toml"
 DEFAULT_CONFIG = """ 
 
 [assistant]
@@ -20,7 +20,7 @@ rep_penalty = 1.1
 """
 
 #default model settings
-MODELS_DIR = Path.home() / ".cache" / "npu-assistant" / "models"
+MODELS_DIR = Path.home() / ".cache" / "nexil" / "models"
 DEFAULT_PROMPT = "You are a helpful assistant. Be concise and direct. Always respond in English only. Address all parts of the user's message, not just the tool-related parts."
 
 @dataclass

@@ -6,6 +6,7 @@ from pathlib import Path
 from .tools import get_all_tools, execute_tool
 from .streamer import ThinkingStreamer
 
+
 def detect_model_caps(model_path):
     """Auto-detect model capabilities from tokenizer metadata."""
     caps = {"thinks": False, "native_tools": False}
@@ -32,7 +33,7 @@ def detect_model_caps(model_path):
 
 def parse_tool_call(response):
     """Check if the model's response contains a tool call. Returns dict with name/arguments or None."""
-    # Try native <tool_call> format first 
+    # Try native <tool_call> format first
     match = re.search(r'<tool_call>\s*(.*?)\s*</tool_call>', response, re.DOTALL)
     if match:
         try:
@@ -80,33 +81,21 @@ def build_system_prompt(config):
     # Fallback prompt-based format for models without native tool calling
     tool_names = [f"- {t['function']['name']}: {t['function']['description']}" for t in tools]
     tool_list_str = "\n".join(tool_names)
-    return config.system_prompt + f"\n\nYou have access to tools. Only use them when the user's request requires it. Do not use tools for greetings or general conversation.\n\nTools available:\n{tool_list_str}\n\nTo use a tool, reply with ONLY:\n```json\n{{\"tool_used\": \"tool_name\", \"arguments\": {{}}}}\n```\nNo other text. Wait for the result."
-
-
-def handle_command(user_input, history, system_prompt):
-    """Handle slash commands. Returns (should_break, history)."""
-    if user_input == "/quit":
-        print("Bye Bye!")
-        return True, history
-    elif user_input == "/clear":
-        history = ov_genai.ChatHistory()
-        history.append({"role": "system", "content": system_prompt})
-        print("History cleared.")
-        return False, history
-    else:
-        print("Unknown command:", user_input)
-        return False, history
-
-
-def print_stats(perf, elapsed):
-    """Print generation stats: duration, input tokens, output tokens."""
-    input_tokens = perf.get_num_input_tokens()
-    output_tokens = perf.get_num_generated_tokens()
-    print(f"\033[90mDuration {elapsed:.2f}s | Input tokens: {input_tokens:,} | Output tokens: {output_tokens}\033[0m")
+    return (
+        config.system_prompt
+        + f"\n\nYou have access to these tools:\n{tool_list_str}\n\n"
+        + "IMPORTANT RULES:\n"
+        + "- For normal conversation (greetings, questions, chitchat), just respond naturally in plain text. NEVER output JSON for normal conversation.\n"
+        + "- ONLY use a tool when the user explicitly asks for something the tool provides (e.g. asking for the current time/date).\n"
+        + "- When you do need a tool, reply with ONLY this format and nothing else:\n"
+        + "```json\n"
+        + '{{"tool_used": "tool_name", "arguments": {{}}}}\n'
+        + "```"
+    )
 
 
 def handle_response(pipe, history, gen_config, config):
-    """Generate a response, handle tool calls if present. Returns updated history."""
+    """Generate a response, handle tool calls if present. Returns (history, elapsed, perf_metrics)."""
     start = time.monotonic()
     response_tokens = []
     streamer = ThinkingStreamer(response_tokens, config.thinks, config.native_tools)
@@ -118,10 +107,8 @@ def handle_response(pipe, history, gen_config, config):
 
     if tool_call is None:
         elapsed = time.monotonic() - start
-        print()
-        print_stats(result.perf_metrics, elapsed)
         history.append({"role": "assistant", "content": full_response})
-        return history
+        return history, elapsed, result.perf_metrics
 
     # Tool call detected — run the tool
     if not config.native_tools:
@@ -149,56 +136,4 @@ def handle_response(pipe, history, gen_config, config):
 
     history.append({"role": "assistant", "content": full_response})
 
-    print()
-    print_stats(result.perf_metrics, elapsed)
-    return history
-
-
-def cmd_chat(config):
-    """Chat things """
-    # NPU-specific options (MAX_PROMPT_LEN, MIN_RESPONSE_LEN only work on NPU)
-    # 9s to load without cache, around 3s with
-    cache_dir = str(Path.home() / ".cache" / "npu-assistant" / "compiled")
-    if config.device == "NPU":
-        pipe = ov_genai.LLMPipeline(
-            config.model_path,
-            config.device,
-            MAX_PROMPT_LEN=2048,
-            MIN_RESPONSE_LEN=512,
-            CACHE_DIR=cache_dir,
-        )
-    else:
-        pipe = ov_genai.LLMPipeline(
-            config.model_path,
-            config.device,
-        )
-    
-    
-    caps = detect_model_caps(config.model_path)
-    config.thinks = caps["thinks"]
-    config.native_tools = caps["native_tools"]
-
-    history = ov_genai.ChatHistory()
-    system_prompt = build_system_prompt(config)
-    history.append({"role": "system", "content": system_prompt})
-
-    gen_config = ov_genai.GenerationConfig()
-    gen_config.max_new_tokens = config.max_new_tokens
-    gen_config.do_sample = config.do_sample
-    gen_config.repetition_penalty = config.rep_penalty
-
-    while True:
-        user_input = input("> ")
-
-        if user_input.startswith("/"):
-            should_break, history = handle_command(user_input, history, system_prompt)
-            if should_break:
-                break
-            continue
-
-        history.append({"role": "user", "content": user_input})
-        history = handle_response(pipe, history, gen_config, config)
-
-
-
-
+    return history, elapsed, result.perf_metrics

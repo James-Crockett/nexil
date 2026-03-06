@@ -4,7 +4,7 @@ from rich.table import Table
 from .config import save_model_path, load_config
 from InquirerPy import inquirer
 
-MODELS_DIR = Path.home() / ".cache" / "npu-assistant" / "models"
+MODELS_DIR = Path.home() / ".cache" / "nexil" / "models"
 
 
 def get_installed_models():
@@ -31,18 +31,17 @@ def find_model():
     return str(models[0])
 
 
-def cmd_model():
-    """ Display downloaded models and choose what to use in runtime"""
+def select_model(current_path=None):
+    """Show model table and selection prompt. Returns selected model path string, or None if cancelled."""
     models = get_installed_models()
 
     if not models:
-        print("No models installed. Download one first:")
-        print("  npu-assistant download --model-id Qwen/Qwen2.5-3B-Instruct")
-        return
+        console = Console()
+        console.print("[red]No models installed.[/red] Download one first:")
+        console.print("  nexil download --model-id Qwen/Qwen2.5-3B-Instruct")
+        return None
 
-    #show downloaded models, highlight active model
-    config = load_config()
-    active_path = config.model_path
+    active_path = current_path
 
     table = Table()
     table.add_column("Models Onboard", justify="left", style="cyan", no_wrap=True)
@@ -52,11 +51,10 @@ def cmd_model():
             table.add_row(f"[bold green]{model.name}[/bold green]", "[bold green]Active[/bold green]")
         else:
             table.add_row(model.name, "")
-      
-    console = Console()
-    console.print(table) 
 
-    #picking model
+    console = Console()
+    console.print(table)
+
     choices = [model.name for model in models]
     choices.append("Exit")
     selected = inquirer.select(
@@ -65,12 +63,21 @@ def cmd_model():
     ).execute()
 
     if selected == "Exit":
-        return
+        return None
 
     for model in models:
         if model.name == selected:
-            save_model_path(str(model))
-            print(f"Model set to: {selected}")
-            break
+            return str(model)
+
+    return None
+
+
+def cmd_model():
+    """ Display downloaded models and choose what to use in runtime"""
+    config = load_config()
+    selected = select_model(current_path=config.model_path)
+    if selected:
+        save_model_path(selected)
+        print(f"Model set to: {Path(selected).name}")
 
     

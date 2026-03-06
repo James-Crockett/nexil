@@ -1,4 +1,4 @@
-from .chat import cmd_chat
+from .cli import cmd_chat
 from .config import load_config
 from .devices import cmd_devices
 from .download import cmd_download, DEFAULT_MODEL_ID
@@ -49,7 +49,7 @@ def main():
 
         if config.model_path is None:
             print("No model found. Install one first:")
-            print(f"  npu-assistant download --model-id Qwen/Qwen3.5-4B")
+            print(f"  nexil download --model-id Qwen/Qwen3.5-4B")
             print(f"\nModels are stored in: {MODELS_DIR}")
             return
 
