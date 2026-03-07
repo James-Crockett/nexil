@@ -87,7 +87,7 @@ pip install git+https://github.com/James-Crockett/nexil.git
 Download a model:
 
 ```sh
-nexil download --model-id Qwen/Qwen/Qwen3-4B
+nexil download --model-id Qwen/Qwen3-4B
 ```
 > Thinking models work better with this application, so I'd recommed it. Instruct models do work but not well with the tools.
 
