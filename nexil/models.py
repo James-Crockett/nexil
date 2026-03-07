@@ -21,14 +21,11 @@ def get_installed_models():
 def find_model():
     """Auto-detect installed model. Returns path string or None."""
     models = get_installed_models()
-    
-    if not MODELS_DIR.exists():
-        return None
-    
+
     if len(models) == 1:
         return str(models[0])
 
-    return str(models[0])
+    return None
 
 
 def select_model(current_path=None):

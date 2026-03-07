@@ -106,8 +106,9 @@ class ThinkingStreamer:
             self.buffer = ""
             return False
 
-        # Outside think/tool_call tags — wait for partial tags to resolve
-        if "<" in self.buffer and not self.buffer.endswith(">"):
+        # Outside think/tool_call tags — wait for partial tags to resolve,
+        # but only if it looks like a real XML tag (< followed by a letter or /)
+        if re.search(r'<[a-zA-Z/]', self.buffer) and not self.buffer.endswith(">"):
             return False
 
         self.printed_lines += self.buffer.count("\n")

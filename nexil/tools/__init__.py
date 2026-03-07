@@ -47,4 +47,7 @@ def execute_tool(name, arguments="{}"):
     else:
         args = arguments
 
-    return handler(**args)
+    try:
+        return handler(**args)
+    except TypeError:
+        return json.dumps({"error": f"Invalid arguments for tool: {name}"})

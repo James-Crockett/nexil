@@ -18,8 +18,11 @@ def detect_model_caps(model_path):
     if not tok_config.exists():
         return caps
 
-    with open(tok_config) as f:
-        data = json.load(f)
+    try:
+        with open(tok_config) as f:
+            data = json.load(f)
+    except (json.JSONDecodeError, OSError):
+        return caps
     added = data.get("added_tokens_decoder", {})
 
     for token_info in added.values():
