@@ -93,7 +93,11 @@ def print_stats(perf, elapsed):
 
 def cmd_chat(config):
     """Chat things """
-    pipe = create_pipeline(config)
+    try:
+        pipe = create_pipeline(config)
+    except Exception as e:
+        console.print(f"[red]Failed to load model:[/red] {e}")
+        return
 
     caps = detect_model_caps(config.model_path)
     config.thinks = caps["thinks"]
@@ -107,8 +111,6 @@ def cmd_chat(config):
     gen_config.max_new_tokens = config.max_new_tokens
     gen_config.do_sample = config.do_sample
     gen_config.repetition_penalty = config.rep_penalty
-
-    print_banner(config)
 
     while True:
         try:
@@ -131,9 +133,16 @@ def cmd_chat(config):
             elif action == "switch_model":
                 selected = select_model(current_path=config.model_path)
                 if selected and selected != config.model_path:
+                    try:
+                        old_path = config.model_path
+                        config.model_path = selected
+                        new_pipe = create_pipeline(config)
+                    except Exception as e:
+                        console.print(f"[red]Failed to load model:[/red] {e}")
+                        config.model_path = old_path
+                        continue
+                    pipe = new_pipe
                     save_model_path(selected)
-                    config.model_path = selected
-                    pipe = create_pipeline(config)
                     caps = detect_model_caps(config.model_path)
                     config.thinks = caps["thinks"]
                     config.native_tools = caps["native_tools"]
@@ -144,9 +153,16 @@ def cmd_chat(config):
             elif action == "switch_device":
                 selected = select_device(current_device=config.device)
                 if selected and selected != config.device:
+                    try:
+                        old_device = config.device
+                        config.device = selected
+                        new_pipe = create_pipeline(config)
+                    except Exception as e:
+                        console.print(f"[red]Failed to switch device:[/red] {e}")
+                        config.device = old_device
+                        continue
+                    pipe = new_pipe
                     save_device(selected)
-                    config.device = selected
-                    pipe = create_pipeline(config)
                     history = ov_genai.ChatHistory()
                     history.append({"role": "system", "content": system_prompt})
                     console.print(f"[green]Switched to {selected}[/green]")

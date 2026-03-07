@@ -1,10 +1,11 @@
-from .cli import cmd_chat
+from .cli import cmd_chat, print_banner
 from .config import load_config
 from .devices import cmd_devices
 from .download import cmd_download, DEFAULT_MODEL_ID
 from .models import find_model, cmd_model, MODELS_DIR
 import argparse
 from pathlib import Path
+from rich.console import Console
 
 def main():
     parser = argparse.ArgumentParser()
@@ -47,10 +48,13 @@ def main():
         if hasattr(args, 'device') and args.device:
             config.device = args.device
 
+        print_banner(config)
+
         if config.model_path is None:
-            print("No model found. Install one first:")
-            print(f"  nexil download --model-id Qwen/Qwen3.5-4B")
-            print(f"\nModels are stored in: {MODELS_DIR}")
+            console = Console()
+            console.print("[yellow]No model found.[/yellow] Download one to get started:\n")
+            console.print(f"  [cyan]nexil download --model-id Qwen/Qwen3-4B[/cyan]\n")
+            console.print(f"[dim]Models are stored in: {MODELS_DIR}[/dim]")
             return
 
         cmd_chat(config)

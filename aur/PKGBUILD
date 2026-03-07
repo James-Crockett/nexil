@@ -6,11 +6,12 @@ pkgdesc="Local LLM chat assistant for Intel hardware via OpenVINO"
 arch=('any')
 url="https://github.com/James-Crockett/nexil"
 license=('Apache-2.0')
-depends=('python' 'python-pip')
+depends=('python')
 makedepends=('python-build' 'python-installer' 'python-hatchling')
-optdepends=('intel-npu-driver: Required for NPU inference')
+optdepends=('intel-npu-driver: only needed for NPU inference, not required for CPU')
 source=("$pkgname-$pkgver.tar.gz::https://github.com/James-Crockett/nexil/archive/v$pkgver.tar.gz")
 sha256sums=('SKIP')
+options=('!strip')
 
 build() {
     cd "$srcdir/nexil-$pkgver"
@@ -19,5 +20,6 @@ build() {
 
 package() {
     cd "$srcdir/nexil-$pkgver"
-    python -m installer --destdir="$pkgdir" dist/*.whl
+    pip install --root="$pkgdir" --no-warn-script-location --prefix=/usr \
+        dist/*.whl
 }
