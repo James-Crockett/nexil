@@ -12,6 +12,11 @@ __pycache__/
 # Virtual environments
 .venv/
 
+# AUR build artifacts
+aur/src/
+aur/pkg/
+aur/*.tar.gz
+
 # IDE
 .idea/
 .vscode/
