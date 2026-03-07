@@ -132,6 +132,10 @@ model_path = "/path/to/model"
 device = "NPU"
 ```
 
+NPU Monitoring Tool:
+
+https://github.com/DMontgomery40/intel-npu-top
+
 ## License
 
 Apache 2.0 — see [LICENSE](LICENSE) for details.
