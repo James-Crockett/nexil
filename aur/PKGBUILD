@@ -1,4 +1,4 @@
-# Maintainer: James Crockett <james@crockett.dev>
+# Maintainer: James Crockett
 pkgname=nexil
 pkgver=0.1.0
 pkgrel=1
@@ -11,7 +11,6 @@ makedepends=('python-build' 'python-installer' 'python-hatchling')
 optdepends=('intel-npu-driver: only needed for NPU inference, not required for CPU')
 source=("$pkgname-$pkgver.tar.gz::https://github.com/James-Crockett/nexil/archive/v$pkgver.tar.gz")
 sha256sums=('SKIP')
-options=('!strip')
 
 build() {
     cd "$srcdir/nexil-$pkgver"
@@ -20,6 +19,5 @@ build() {
 
 package() {
     cd "$srcdir/nexil-$pkgver"
-    pip install --root="$pkgdir" --no-warn-script-location --prefix=/usr \
-        dist/*.whl
+    python -m installer --destdir="$pkgdir" dist/*.whl
 }
