@@ -14,6 +14,8 @@ A personal assistant that runs locally on your machine with a familiar CLI inter
 
 My laptop has a NPU and it does nothing. So, I did some research and I thought it would be a cool project to run a local llm that can do stuff locally (tool callls and what not), espcially with OpenClaw being a big hype rn, I decided to do it... and this is the result of it. Since, I have an Intel processor I went with OpenVino as the base (I plan to support all hardware and brands). But, from what I know this is the only way to run stuff of the NPU. Some people said stuff about Onnx runtime would work but I dont know. I have a lot of ideas to make this tool more use full. As of now it only tells time (lmao). I feel this project has a lot of potential. Let's see where this goes.
 
+https://github.com/user-attachments/assets/97170686-7d46-496d-9d75-3636a5f5ab51
+
 ## Features
 
 - Run LLMs locally on Intel NPU and GPU. (GPU not supported as of now but could theoritically work).
