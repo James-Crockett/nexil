@@ -1,6 +1,6 @@
 # Maintainer: James Crockett
 pkgname=nexil
-pkgver=0.1.0
+pkgver=0.1.3
 pkgrel=1
 pkgdesc="Local LLM chat assistant for Intel hardware via OpenVINO"
 arch=('any')

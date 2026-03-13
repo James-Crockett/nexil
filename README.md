@@ -134,7 +134,7 @@ model_path = "/path/to/model"
 device = "NPU"
 ```
 
-NPU Monitoring Tool:
+## NPU Monitoring Tool:
 
 https://github.com/DMontgomery40/intel-npu-top
 
